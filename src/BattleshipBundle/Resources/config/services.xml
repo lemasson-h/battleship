@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <!-- services -->
+        <service id="battleship.service.direction" class="BattleshipBundle\Service\DirectionService"/>
+
+        <service id="battleship.service.grid" class="BattleshipBundle\Service\GridService" />
+
+        <service id="battleship.service.position" class="BattleshipBundle\Service\PositionService">
+            <argument type="service" id="battleship.service.direction" />
+        </service>
+
+        <service id="battleship.service.initialization_game" class="BattleshipBundle\Service\InitializationGameService">
+            <argument type="service" id="battleship.service.user_communication.console" />
+            <argument type="service" id="battleship.service.position" />
+            <argument type="service" id="battleship.service.grid" />
+            <argument type="service" id="battleship.service.console_logger" />
+        </service>
+
+        <!-- Transformer -->
+        <service id="battleship.transformer.column" class="BattleshipBundle\Transformer\ColumnTransformer" />
+
+        <service id="battleship.transformer.row" class="BattleshipBundle\Transformer\RowTransformer" />
+
+        <!-- Restrictions -->
+        <service id="battleship.restriction.boat" class="BattleshipBundle\Restriction\BoatRestriction"/>
+
+        <!-- Factories -->
+        <service id="battleship.factory.grid" class="BattleshipBundle\Factory\GridFactory" />
+
+        <service id="battleship.factory.boat" class="BattleshipBundle\Factory\BoatFactory">
+            <argument type="service" id="battleship.restriction.boat" />
+        </service>
+
+        <!-- User communication -->
+        <service id="battleship.service.user_communication.console" class="BattleshipBundle\Service\ConsoleUserCommunication">
+            <argument type="service" id="battleship.restriction.boat" />
+            <argument type="service" id="battleship.transformer.column" />
+            <argument type="service" id="battleship.transformer.row" />
+            <argument type="service" id="battleship.service.direction" />
+        </service>
+
+        <!--logger -->
+        <service id="battleship.service.console_logger" class="BattleshipBundle\Logger\ConsoleLogger" />
+
+        <!-- consoles -->
+        <service id="battleship.command.game" class="BattleshipBundle\Command\GameCommand">
+            <argument type="service" id="battleship.factory.boat" />
+            <argument type="service" id="battleship.restriction.boat" />
+            <argument type="service" id="battleship.factory.grid" />
+            <argument type="service" id="battleship.service.user_communication.console" />
+            <argument type="service" id="battleship.service.initialization_game" />
+            <argument type="service" id="battleship.service.console_logger" />
+            <tag name="console.command" />
+        </service>
+    </services>
+</container>
