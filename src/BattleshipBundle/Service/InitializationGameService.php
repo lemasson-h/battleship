@@ -50,12 +50,12 @@ class InitializationGameService
         while (!$user->hasAllBoatsPlaced()) {
             try {
                 $positionWanted = $this->userCommunication->askPlaceBoat($user);
+                $positionList = $this->positionService->findPositions($user, $positionWanted);
 
                 if ($positionWanted->getBoat()->hasPosition()) {
                     $positionWanted->getBoat()->clearPosition();
                 }
 
-                $positionList = $this->positionService->findPositions($user, $positionWanted);
                 $this->gridService->setBoatPlace($positionWanted->getBoat(), $positionList);
             } catch (CustomerException $e) {
                 $this->logger->error($e->getMessage());

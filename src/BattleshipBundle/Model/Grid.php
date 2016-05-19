@@ -18,6 +18,11 @@ class Grid
     private $boatList;
 
     /**
+     * @var int
+     */
+    private $totalShots;
+
+    /**
      * @param int   $length
      * @param array $positions
      */
@@ -26,6 +31,7 @@ class Grid
         $this->boatList = [];
         $this->length = $length;
         $this->positions = $positions;
+        $this->totalShots = 0;
     }
 
     /**
@@ -214,5 +220,58 @@ class Grid
     public function getPositions()
     {
         return $this->positions;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalBoatsSunk()
+    {
+        $boatsSunk = 0;
+
+        foreach ($this->boatList as $boat) {
+            if ($boat->isSunk()) {
+                ++$boatsSunk;
+            }
+        }
+
+        return $boatsSunk;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalHits()
+    {
+        $totalHit = 0;
+
+        foreach ($this->positions as $positionX) {
+            /** @var Position $position */
+            foreach ($positionX as $position) {
+                if ($position->isHit()) {
+                    ++$totalHit;
+                }
+            }
+        }
+
+        return $totalHit;
+    }
+
+    /**
+     * @return Grid
+     */
+    public function addShot()
+    {
+        ++$this->totalShots;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalShots()
+    {
+        return $this->totalShots;
     }
 }

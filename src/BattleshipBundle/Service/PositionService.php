@@ -47,7 +47,7 @@ class PositionService
                 throw new CustomerException('Boat can not be place outside the grid.');
             }
 
-            if ($grid->isBoatPosition($x, $y)) {
+            if (null !== ($boat = $grid->findBoat($x, $y)) && $boat != $positionBoatWanted->getBoat()) {
                 throw new CustomerException('You can not place 2 boats on the same position.');
             }
 

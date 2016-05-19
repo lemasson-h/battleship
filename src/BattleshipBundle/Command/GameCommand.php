@@ -163,10 +163,10 @@ class GameCommand extends Command
             while (null === $this->loserGrid) {
                 if (0 === ($i % 2)) {
                     $output->writeln('Player 1 plays:');
-                    $boat = $this->gameService->play($this->game->getUser2());
+                    $boat = $this->gameService->play($this->game->getUser1(), $this->game->getUser2());
                 } else {
                     $output->writeln('Player 2 plays:');
-                    $boat = $this->gameService->play($this->game->getUser1());
+                    $boat = $this->gameService->play($this->game->getUser2(), $this->game->getUser1());
                 }
 
                 if ($boat instanceof Boat) {

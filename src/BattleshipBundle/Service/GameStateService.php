@@ -21,66 +21,89 @@ class GameStateService
     }
 
     /**
-     * @param int   $key
-     * @param array $positions
+     * @param bool $isFirstUser
+     * @param int  $expectedShots
+     * @param int  $expectedHits
+     * @param int  $expectedNumberOfBoatsSunk
      *
      * @return bool
      */
-    public function checkBoatPositionForUser1($key, array $positions)
+    public function checkScore($isFirstUser, $expectedShots, $expectedHits, $expectedNumberOfBoatsSunk)
     {
         if (null === $this->gameConsoleFinishedEvent) {
             return false;
         }
 
-        return $this->checkBoatPosition($this->gameConsoleFinishedEvent->getUser1(), $key, $positions);
+        $user = $this->getUser($isFirstUser);
+        return $expectedShots === $user->getTotalShots()
+            && $expectedHits === $user->getTotalHits()
+            && $expectedNumberOfBoatsSunk === $user->getTotalBoatsSunk();
     }
 
     /**
-     * @param int   $key
-     * @param array $positions
+     * @param bool $isFirstUser
+     * @param int  $key
      *
      * @return bool
      */
-    public function checkBoatPositionForUser2($key, array $positions)
+    public function checkBoatPositionEmpty($isFirstUser, $key)
     {
         if (null === $this->gameConsoleFinishedEvent) {
             return false;
         }
 
-        return $this->checkBoatPosition($this->gameConsoleFinishedEvent->getUser2(), $key, $positions);
+        $user = $this->getUser($isFirstUser);
+        $boatList = $user->getBoatList();
+        if (!isset($boatList[$key])) {
+            return false;
+        }
+
+        $boat = $boatList[$key];
+
+        return !$boat->hasPosition();
     }
 
     /**
-     * @param array $expectedHitPositions
-     * @param array $expectedMissPositions
+     * @param bool  $isFirstUser
+     * @param array $boatKeySunkList
      *
      * @return bool
      */
-    public function checkHitForUser1(array $expectedHitPositions, array $expectedMissPositions)
+    public function checkBoatsSunk($isFirstUser, array $boatKeySunkList)
     {
-        return $this->checkHit($this->gameConsoleFinishedEvent->getUser2(), $expectedHitPositions, $expectedMissPositions);
+        if (null === $this->gameConsoleFinishedEvent) {
+            return false;
+        }
+
+        $user = $this->getUser($isFirstUser);
+        $boatList = $user->getBoatList();
+
+        foreach($boatList as $key => $boat) {
+            if (
+                (in_array($key, $boatKeySunkList) && !$boat->isSunk())
+                || (!in_array($key, $boatKeySunkList) && $boat->isSunk())
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
-     * @param array $expectedHitPositions
-     * @param array $expectedMissPositions
-     *
-     * @return bool
-     */
-    public function checkHitForUser2(array $expectedHitPositions, array $expectedMissPositions)
-    {
-        return $this->checkHit($this->gameConsoleFinishedEvent->getUser1(), $expectedHitPositions, $expectedMissPositions);
-    }
-
-    /**
-     * @param Grid  $user
+     * @param bool  $isFirstUser
      * @param int   $key
      * @param array $positions
      *
      * @return bool
      */
-    private function checkBoatPosition(Grid $user, $key, array $positions)
+    public function checkBoatPosition($isFirstUser, $key, array $positions)
     {
+        if (null === $this->gameConsoleFinishedEvent) {
+            return false;
+        }
+
+        $user = $this->getUser($isFirstUser);
         $boatList = $user->getBoatList();
         if (!isset($boatList[$key])) {
             return false;
@@ -97,14 +120,20 @@ class GameStateService
     }
 
     /**
-     * @param Grid  $user
+     * @param bool  $isFirstUser
      * @param array $expectedHitPositions
      * @param array $expectedMissPositions
      *
      * @return bool
      */
-    private function checkHit(Grid $user, array $expectedHitPositions, array $expectedMissPositions)
+    public function checkHit($isFirstUser, array $expectedHitPositions, array $expectedMissPositions)
     {
+        if (null === $this->gameConsoleFinishedEvent) {
+            return false;
+        }
+
+        $user = $this->getUser($isFirstUser);
+
         foreach ($user->getPositions() as $x => $positionX) {
             /** @var Position $position */
             foreach ($positionX as $y => $position) {
@@ -140,5 +169,15 @@ class GameStateService
     {
         return isset($expectedPositions[$position->getX()])
         && isset($expectedPositions[$position->getX()][$position->getY()]);
+    }
+
+    /**
+     * @param bool $isFirstUser
+     *
+     * @return Grid
+     */
+    private function getUser($isFirstUser)
+    {
+        return ($isFirstUser ? $this->gameConsoleFinishedEvent->getUser1() : $this->gameConsoleFinishedEvent->getUser2());
     }
 }

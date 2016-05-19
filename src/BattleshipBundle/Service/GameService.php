@@ -39,14 +39,16 @@ class GameService
     }
 
     /**
+     * @param Grid $user
      * @param Grid $grid
      *
      * @return Boat|null
      */
-    public function play(Grid $grid)
+    public function play(Grid $user, Grid $grid)
     {
         try {
             $positionHitWanted = $this->userCommunication->askHitPlace($grid);
+            $user->addShot();
 
             return $this->gridService->hitPosition($grid, $positionHitWanted);
         } catch (CustomerException $e) {
