@@ -6,7 +6,10 @@
         <!-- services -->
         <service id="battleship.service.direction" class="BattleshipBundle\Service\DirectionService"/>
 
-        <service id="battleship.service.grid" class="BattleshipBundle\Service\GridService" />
+        <service id="battleship.service.grid" class="BattleshipBundle\Service\GridService">
+            <argument type="service" id="battleship.service.user_communication.console" />
+            <argument type="service" id="event_dispatcher" />
+        </service>
 
         <service id="battleship.service.position" class="BattleshipBundle\Service\PositionService">
             <argument type="service" id="battleship.service.direction" />
@@ -15,6 +18,12 @@
         <service id="battleship.service.initialization_game" class="BattleshipBundle\Service\InitializationGameService">
             <argument type="service" id="battleship.service.user_communication.console" />
             <argument type="service" id="battleship.service.position" />
+            <argument type="service" id="battleship.service.grid" />
+            <argument type="service" id="battleship.service.console_logger" />
+        </service>
+
+        <service id="battleship.service.game" class="BattleshipBundle\Service\GameService">
+            <argument type="service" id="battleship.service.user_communication.console" />
             <argument type="service" id="battleship.service.grid" />
             <argument type="service" id="battleship.service.console_logger" />
         </service>
@@ -53,7 +62,9 @@
             <argument type="service" id="battleship.service.user_communication.console" />
             <argument type="service" id="battleship.service.initialization_game" />
             <argument type="service" id="battleship.service.console_logger" />
+            <argument type="service" id="battleship.service.game" />
             <tag name="console.command" />
+            <tag name="kernel.event_listener" event="battleship.event.grid_finished" method="onFinishedGame" />
         </service>
     </services>
 </container>

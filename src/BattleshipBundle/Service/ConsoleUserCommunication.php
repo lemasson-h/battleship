@@ -141,7 +141,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
 
         $boatList = $grid->getBoatList();
         $questionBoat = new ChoiceQuestion('Which boat do you want to place?', array_map(function(Boat $boat) {
-            return $boat->getId(). '-' . $boat->getName();
+            return $boat->getDescription();
         }, $boatList));
         $questionX = $this->getQuestionBoatX($grid);
         $questionY = $this->getQuestionBoatY($grid);
@@ -222,7 +222,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
         $context = $this;
 
         return new ChoiceQuestion(
-            'Which column do you want to place it?',
+            'Which column do you want to hit it?',
             array_map(
                 function($x) use ($context) {
                     return $context->columnTransformer->transform($x);
@@ -247,7 +247,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
         $context = $this;
 
         return new ChoiceQuestion(
-            'Which row do you want to place it?',
+            'Which row do you want to hit it?',
             array_map(
                 function($x) use ($context) {
                     return $context->rowTransformer->transform($x);

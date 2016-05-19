@@ -20,18 +20,22 @@ class Boat
     /**
      * @var int
      */
-    private $length;
+    protected $length;
 
     /**
      * @var Position[]
      */
-    protected $positions;
+    protected $positions = [];
+
+    /**
+     * @var float
+     */
+    protected $percentageHit = 0;
 
     public function __construct()
     {
         $this->id = md5(microtime());
         $this->length = static::LENGTH;
-        $this->positions = [];
     }
 
     /**
@@ -108,5 +112,46 @@ class Boat
     public function hasPosition()
     {
         return count($this->positions) > 0;
+    }
+
+    /**
+     * @return Boat
+     */
+    public function updatePercentageHit()
+    {
+        $hit = 0;
+        foreach ($this->positions as $position) {
+            if ($position->isHit()) {
+                ++$hit;
+            }
+        }
+
+        $this->percentageHit = ($hit * 100.00 / $this->length);
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHit()
+    {
+        return $this->percentageHit > 0;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSunk()
+    {
+        return $this->percentageHit == 100.00;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->getId().'-'.$this->getName();
     }
 }

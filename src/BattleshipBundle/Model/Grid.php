@@ -31,23 +31,20 @@ class Grid
     /**
      * @param int $x
      * @param int $y
-     * @param int $status
      *
      * @return Grid
      *
      * @throws CustomerException
      */
-    public function hitPosition($x, $y, $status)
+    public function hitPosition($x, $y)
     {
-        if (
-            !isset($this->positions[$x])
-            || !isset($this->positions[$x][$y])
-            || !($this->positions[$x][$y] instanceof Position)
-        ) {
-            throw new CustomerException('The position does not exist on the grid.');
-        }
+        $position = $this->getPosition($x, $y);
 
-        $this->positions[$x][$y]->setStatus($status);
+        if ($position->isBoat()) {
+            $position->setStatus(Position::STATUS_HIT);
+        } else {
+            $position->setStatus(Position::STATUS_MISS);
+        }
 
         return $this;
     }
@@ -172,6 +169,37 @@ class Grid
 
         foreach ($this->positions[$x] as $positionX) {
             if (!$positionX->isHit()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param int $x
+     * @param int $y
+     *
+     * @return Boat|null
+     */
+    public function findBoat($x, $y)
+    {
+        foreach ($this->boatList as $boat) {
+            if ($boat->isBoatPosition($x, $y)) {
+                return $boat;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasAllBoatsSunk()
+    {
+        foreach ($this->boatList as $boat) {
+            if (!$boat->isSunk()) {
                 return false;
             }
         }
