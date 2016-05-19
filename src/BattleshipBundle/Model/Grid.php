@@ -86,7 +86,7 @@ class Grid
      */
     public function addBoat(Boat $boat)
     {
-        $this->boatList[$boat->getId()] = $boat;
+        $this->boatList[] = $boat;
     }
 
     /**
@@ -167,8 +167,9 @@ class Grid
             throw new FatalException('Invalid column in the grid.');
         }
 
+        /** @var Position $positionX */
         foreach ($this->positions[$x] as $positionX) {
-            if (!$positionX->isHit()) {
+            if (!$positionX->isAlreadySet()) {
                 return false;
             }
         }
@@ -205,5 +206,13 @@ class Grid
         }
 
         return true;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPositions()
+    {
+        return $this->positions;
     }
 }

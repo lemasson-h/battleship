@@ -27,11 +27,16 @@
             <argument type="service" id="battleship.service.grid" />
             <argument type="service" id="battleship.service.console_logger" />
         </service>
+        <service id="battleship.service.game_state" class="BattleshipBundle\Service\GameStateService">
+            <tag name="kernel.event_listener" event="battleship.event.game_console_finished" method="onGameFinished" />
+        </service>
 
         <!-- Transformer -->
         <service id="battleship.transformer.column" class="BattleshipBundle\Transformer\ColumnTransformer" />
 
         <service id="battleship.transformer.row" class="BattleshipBundle\Transformer\RowTransformer" />
+
+        <service id="battlership.transformer.boat" class="BattleshipBundle\Transformer\BoatTransformer" />
 
         <!-- Restrictions -->
         <service id="battleship.restriction.boat" class="BattleshipBundle\Restriction\BoatRestriction"/>
@@ -43,12 +48,19 @@
             <argument type="service" id="battleship.restriction.boat" />
         </service>
 
+        <service id="battleship.factory.game" class="BattleshipBundle\Factory\GameFactory">
+            <argument type="service" id="battleship.factory.grid" />
+            <argument type="service" id="battleship.factory.boat" />
+            <argument type="service" id="battleship.restriction.boat" />
+        </service>
+
         <!-- User communication -->
         <service id="battleship.service.user_communication.console" class="BattleshipBundle\Service\ConsoleUserCommunication">
             <argument type="service" id="battleship.restriction.boat" />
             <argument type="service" id="battleship.transformer.column" />
             <argument type="service" id="battleship.transformer.row" />
             <argument type="service" id="battleship.service.direction" />
+            <argument type="service" id="battlership.transformer.boat" />
         </service>
 
         <!--logger -->
@@ -56,15 +68,14 @@
 
         <!-- consoles -->
         <service id="battleship.command.game" class="BattleshipBundle\Command\GameCommand">
-            <argument type="service" id="battleship.factory.boat" />
-            <argument type="service" id="battleship.restriction.boat" />
-            <argument type="service" id="battleship.factory.grid" />
+            <argument type="service" id="battleship.factory.game" />
             <argument type="service" id="battleship.service.user_communication.console" />
             <argument type="service" id="battleship.service.initialization_game" />
             <argument type="service" id="battleship.service.console_logger" />
             <argument type="service" id="battleship.service.game" />
+            <argument type="service" id="event_dispatcher" />
             <tag name="console.command" />
-            <tag name="kernel.event_listener" event="battleship.event.grid_finished" method="onFinishedGame" />
+            <tag name="kernel.event_listener" event="battleship.event.game_finished" method="onGameFinished" />
         </service>
     </services>
 </container>

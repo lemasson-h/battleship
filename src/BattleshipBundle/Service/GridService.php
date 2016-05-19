@@ -1,7 +1,7 @@
 <?php
 namespace BattleshipBundle\Service;
 
-use BattleshipBundle\Event\GridFinishedEvent;
+use BattleshipBundle\Event\GameFinishedEvent;
 use BattleshipBundle\Exception\FatalException;
 use BattleshipBundle\Model\Boat;
 use BattleshipBundle\Model\Grid;
@@ -70,7 +70,7 @@ class GridService
         }
 
         if ($grid->hasAllBoatsSunk()) {
-            $this->eventDispatcher->dispatch(GridFinishedEvent::TAG_NAME, new GridFinishedEvent($grid));
+            $this->eventDispatcher->dispatch(GameFinishedEvent::TAG_NAME, new GameFinishedEvent($grid));
         }
 
         return $boat;

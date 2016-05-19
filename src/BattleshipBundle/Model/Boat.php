@@ -34,7 +34,7 @@ class Boat
 
     public function __construct()
     {
-        $this->id = md5(microtime());
+        $this->id = uniqid();
         $this->length = static::LENGTH;
     }
 

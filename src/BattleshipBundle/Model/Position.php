@@ -101,8 +101,24 @@ class Position
     /**
      * @return bool
      */
-    public function isHit()
+    public function isAlreadySet()
     {
         return self::STATUS_NONE !== $this->status;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHit()
+    {
+        return self::STATUS_HIT === $this->status;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMiss()
+    {
+        return self::STATUS_MISS === $this->status;
     }
 }

@@ -5,9 +5,9 @@ namespace BattleshipBundle\Event;
 use BattleshipBundle\Model\Grid;
 use Symfony\Component\EventDispatcher\Event;
 
-class GridFinishedEvent extends Event
+class GameFinishedEvent extends Event
 {
-    const TAG_NAME = 'battleship.event.grid_finished';
+    const TAG_NAME = 'battleship.event.game_finished';
 
     /**
      * @var Grid

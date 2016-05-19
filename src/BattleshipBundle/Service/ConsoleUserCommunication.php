@@ -9,6 +9,7 @@ use BattleshipBundle\Model\Grid;
 use BattleshipBundle\Model\PositionBoatWanted;
 use BattleshipBundle\Model\PositionHitWanted;
 use BattleshipBundle\Restriction\BoatRestriction;
+use BattleshipBundle\Transformer\BoatTransformer;
 use BattleshipBundle\Transformer\ColumnTransformer;
 use BattleshipBundle\Transformer\RowTransformer;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -54,6 +55,11 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     private $input;
 
     /**
+     * @var int
+     */
+    private $attemptQuestion;
+
+    /**
      * @var ChoiceQuestion
      */
     private $questionBoatX;
@@ -69,25 +75,29 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     private $questionDirection;
 
     /**
-     * @var ChoiceQuestion
+     * @var BoatTransformer
      */
-    private $questionHitX;
+    private $boatTransformer;
 
     /**
-     * @var ChoiceQuestion
+     * @param BoatRestriction   $boatRestriction
+     * @param ColumnTransformer $columnTransformer
+     * @param RowTransformer    $rowTransformer
+     * @param DirectionService  $directionService
+     * @param BoatTransformer   $boatTransformer
      */
-    private $questionHitY;
-
     public function __construct(
         BoatRestriction $boatRestriction,
         ColumnTransformer $columnTransformer,
         RowTransformer $rowTransformer,
-        DirectionService $directionService
+        DirectionService $directionService,
+        BoatTransformer $boatTransformer
     ) {
         $this->boatRestriction = $boatRestriction;
         $this->columnTransformer = $columnTransformer;
         $this->rowTransformer = $rowTransformer;
         $this->directionService = $directionService;
+        $this->boatTransformer = $boatTransformer;
     }
 
     /**
@@ -127,6 +137,18 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     }
 
     /**
+     * @param int $attemptQuestion
+     *
+     * @return ConsoleUserCommunication
+     */
+    public function setAttemptQuestion($attemptQuestion)
+    {
+        $this->attemptQuestion = $attemptQuestion;
+
+        return $this;
+    }
+
+    /**
      * @param Grid $grid
      *
      * @return PositionBoatWanted
@@ -139,20 +161,17 @@ class ConsoleUserCommunication implements UserCommunicationInterface
             throw new FatalException('ConsoleUserCommunication hasn\'t been configured properly to be used.');
         }
 
-        $boatList = $grid->getBoatList();
-        $questionBoat = new ChoiceQuestion('Which boat do you want to place?', array_map(function(Boat $boat) {
-            return $boat->getDescription();
-        }, $boatList));
+        $questionBoat = $this->getQuestionChoiceBoat($grid);
         $questionX = $this->getQuestionBoatX($grid);
         $questionY = $this->getQuestionBoatY($grid);
         $questionDirection = $this->getQuestionDirection();
 
-        $boatId = $this->questionHelper->ask($this->input, $this->output, $questionBoat);
+        $boat = $this->boatTransformer->reverse($this->questionHelper->ask($this->input, $this->output, $questionBoat));
         $x = $this->columnTransformer->reverse($this->questionHelper->ask($this->input, $this->output, $questionX));
         $y = $this->rowTransformer->reverse($this->questionHelper->ask($this->input, $this->output, $questionY));
         $direction = $this->directionService->getDirectionType($this->questionHelper->ask($this->input, $this->output, $questionDirection));
 
-        return new PositionBoatWanted($boatList[$boatId], $x, $y, $direction);
+        return new PositionBoatWanted($boat, $x, $y, $direction);
     }
 
     /**
@@ -176,6 +195,19 @@ class ConsoleUserCommunication implements UserCommunicationInterface
         return new PositionHitWanted($x, $y);
     }
 
+    private function getQuestionChoiceBoat(Grid $grid)
+    {
+        $context = $this;
+        $boatList = $grid->getBoatList();
+        $this->boatTransformer->setGrid($grid);
+        $questionBoat = new ChoiceQuestion('Which boat do you want to place?', array_map(function(Boat $boat) use ($context) {
+            return $context->boatTransformer->transform($boat);
+        }, $boatList));
+        $questionBoat->setMaxAttempts($this->attemptQuestion);
+
+        return $questionBoat;
+    }
+
     /**
      * @param Grid $grid
      *
@@ -189,6 +221,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
             $this->questionBoatX = new ChoiceQuestion('At which column do you want to place it?', array_map(function($x) use ($context) {
                 return $context->columnTransformer->transform($x);
             }, range(0, $grid->getLength() - 1)));
+            $this->questionBoatX->setMaxAttempts($this->attemptQuestion);
         }
 
         return $this->questionBoatX;
@@ -207,6 +240,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
             $this->questionBoatY = new ChoiceQuestion('At which row do you want to place it?', array_map(function ($y) use ($context) {
                 return $context->rowTransformer->transform($y);
             }, range(0, $grid->getLength() - 1)));
+            $this->questionBoatY->setMaxAttempts($this->attemptQuestion);
         }
 
         return $this->questionBoatY;
@@ -220,8 +254,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     private function getQuestionHitX(Grid $grid)
     {
         $context = $this;
-
-        return new ChoiceQuestion(
+        $question = new ChoiceQuestion(
             'Which column do you want to hit it?',
             array_map(
                 function($x) use ($context) {
@@ -234,6 +267,10 @@ class ConsoleUserCommunication implements UserCommunicationInterface
                 )
             )
         );
+
+        $question->setMaxAttempts($this->attemptQuestion);
+
+        return $question;
     }
 
     /**
@@ -245,8 +282,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     private function getQuestionHitY(Grid $grid, $x)
     {
         $context = $this;
-
-        return new ChoiceQuestion(
+        $question = new ChoiceQuestion(
             'Which row do you want to hit it?',
             array_map(
                 function($x) use ($context) {
@@ -254,11 +290,15 @@ class ConsoleUserCommunication implements UserCommunicationInterface
                 }, array_filter(
                     range(0, $grid->getLength() - 1),
                     function($y) use ($grid, $x) {
-                        return !$grid->getPosition($x, $y)->isHit();
+                        return !$grid->getPosition($x, $y)->isAlreadySet();
                     }
                 )
             )
         );
+
+        $question->setMaxAttempts($this->attemptQuestion);
+
+        return $question;
     }
 
     /**
@@ -268,6 +308,7 @@ class ConsoleUserCommunication implements UserCommunicationInterface
     {
         if (null === $this->questionDirection) {
             $this->questionDirection = new ChoiceQuestion('In Which direction do you want to place it?', $this->directionService->getDirectionNameList());
+            $this->questionDirection->setMaxAttempts($this->attemptQuestion);
         }
 
         return $this->questionDirection;
